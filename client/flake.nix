@@ -13,7 +13,6 @@
       iceoryx2 = pkgs.callPackage ./iceoryx2.nix { };
       bdwgc = pkgs.callPackage ./bdwgc.nix { };
       packages = (with pkgs; [
-        glibc
         (capnproto.overrideAttrs (oldAttrs: {
           cmakeFlags = oldAttrs.cmakeFlags ++ [ "-DBUILD_SHARED_LIBS=OFF" ];
         }))
