@@ -1,5 +1,5 @@
 {
-  description = "A cstar server development environment";
+  description = "A cstar server development / build environment(ocaml part)";
 
   inputs = {
     opam-nix.url = "github:tweag/opam-nix";
