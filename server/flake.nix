@@ -65,23 +65,22 @@
 
       scope' = scope.overrideScope overlay;
 
-      devPackages = builtins.attrValues (pkgs.lib.getAttrs (builtins.attrNames devPackagesQuery) scope')
-        ++ (with pkgs; [
+      devPackages = builtins.attrValues (pkgs.lib.getAttrs (builtins.attrNames devPackagesQuery) scope');
+      finalPackages = devPackages ++ (with pkgs; [
             capnproto
             clang
             (gmp.override { withStatic = true; })
             pkg-config
-            pcre2.overrideAttrs (oldAttrs: {
+            (pcre2.overrideAttrs (oldAttrs: {
               configureFlags = [ "--disable-shared" ] ++ oldAttrs.configureFlags;
-            })
+            }))
             gnum4
             llvmPackages.libclang
             llvmPackages.bintools
-          ]);;
+          ]);
     in {
-      ocamlPackages = devPackages;
       devShells.default = pkgs.mkShell {
-        buildInputs = devPackages;
+        buildInputs = finalPackages;
         shellHook = ''
           export LIBCLANG_PATH=${pkgs.llvmPackages.libclang.lib}/lib
         '';
