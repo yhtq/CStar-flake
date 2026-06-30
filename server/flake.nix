@@ -2,51 +2,89 @@
   description = "A cstar server development environment";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    opam-nix.url = "github:tweag/opam-nix";
+    flake-utils.url = "github:numtide/flake-utils";
+    nixpkgs.follows = "opam-nix/nixpkgs";
   };
 
-  outputs = { self, nixpkgs, ... }: let
-    system = "x86_64-linux";
-  in {
-    devShells."${system}".default = let
-      pkgs = import nixpkgs { inherit system; };
-      myPcre2 = pkgs.pcre2.overrideAttrs (oldAttrs: {
-        configureFlags = [ "--disable-shared" ] ++ oldAttrs.configureFlags;
-      });
-      ocamlPackages = "zarith ocamlfind camlp5.8.03.06 dune ppx_jane core core_unix pprint re ppx_import ppx_deriving menhir csv ppx_import yojson ppx_yojson_conv lsp async ppx_let lwt lwt_ppx extlib cmdliner capnp capnp-rpc capnp-rpc-net capnp-rpc-unix eio eio_main";
-      cstarServerSetup = pkgs.writeShellScriptBin "cstar-server-setup" ''
-        export LIBCLANG_PATH=${pkgs.llvmPackages.libclang.lib}/lib
-        export RUSTFLAGS=$RUSTFLAGS" -Clink-self-contained=-linker"
-        # opam switch -q create cstar ocaml-base-compiler.5.3.0 || true
-        if ! opam switch -q | grep -q cstar; then
-          opam switch create cstar ocaml-base-compiler.5.3.0
-        fi
-        opam switch -q cstar
-        eval "$(opam env)"
-        opam install ${ocamlPackages} --check || opam install ${ocamlPackages} -y
-        opam pin -q camlp5 8.03.06
-      '';
-      packages = (with pkgs; [
-        rustup
-        capnproto
-        clang
-        rsync
-        git
-        (gmp.override { withStatic = true; })
-        pkg-config
-        myPcre2
-        gnum4
-        llvmPackages.libclang
-        llvmPackages.bintools
-      ]) ++ [ cstarServerSetup ];
-    in pkgs.mkShell rec {
-      buildInputs = packages;
-      nativeBuildInputs = [ pkgs.makeWrapper ];
-      shellHook = ''
-        export LIBCLANG_PATH=${pkgs.llvmPackages.libclang.lib}/lib
-        export RUSTFLAGS=$RUSTFLAGS" -Clink-self-contained=-linker"
-        echo "Run 'cstar-server-setup' when you need to initialize/update opam dependencies."
-      '';
-    };
-  };
+  outputs =
+    { self, flake-utils, opam-nix, nixpkgs, ... }:
+    flake-utils.lib.eachDefaultSystem (system: let
+      pkgs = nixpkgs.legacyPackages.${system};
+      on = opam-nix.lib.${system};
+
+      # Dev tools
+      devPackagesQuery = {
+        ocaml-lsp-server = "*";
+        ocamlformat = "*";
+      };
+
+      # All dependencies with version constraints
+      query = devPackagesQuery // {
+        # Compiler — pinned to 5.3.0 to match current opam setup
+        ocaml-base-compiler = "5.3.0";
+        # Base
+        zarith = "*";
+        ocamlfind = "*";
+        camlp5 = "8.03.06";
+        dune = "*";
+        # PPX & core
+        ppx_jane = "*";
+        core = "*";
+        core_unix = "*";
+        ppx_import = "*";
+        ppx_deriving = "*";
+        ppx_let = "*";
+        ppx_yojson_conv = "*";
+        # Utilities
+        pprint = "*";
+        re = "*";
+        menhir = "*";
+        csv = "*";
+        yojson = "*";
+        lsp = "*";
+        extlib = "*";
+        cmdliner = "*";
+        # Async / Lwt
+        async = "*";
+        lwt = "*";
+        lwt_ppx = "*";
+        # Cap'n Proto (OCaml bindings)
+        capnp = "*";
+        "capnp-rpc" = "*";
+        "capnp-rpc-net" = "*";
+        "capnp-rpc-unix" = "*";
+        # Eio
+        eio = "*";
+        eio_main = "*";
+      };
+
+      scope = on.buildOpamProject' { } ./. query;
+
+      overlay = final: prev: { };
+
+      scope' = scope.overrideScope overlay;
+
+      devPackages = builtins.attrValues (pkgs.lib.getAttrs (builtins.attrNames devPackagesQuery) scope')
+        ++ (with pkgs; [
+            capnproto
+            clang
+            (gmp.override { withStatic = true; })
+            pkg-config
+            pcre2.overrideAttrs (oldAttrs: {
+              configureFlags = [ "--disable-shared" ] ++ oldAttrs.configureFlags;
+            })
+            gnum4
+            llvmPackages.libclang
+            llvmPackages.bintools
+          ]);;
+    in {
+      ocamlPackages = devPackages;
+      devShells.default = pkgs.mkShell {
+        buildInputs = devPackages;
+        shellHook = ''
+          export LIBCLANG_PATH=${pkgs.llvmPackages.libclang.lib}/lib
+        '';
+      };
+    });
 }

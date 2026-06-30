@@ -1,5 +1,24 @@
 {
   "nodes": {
+    "client": {
+      "inputs": {
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "path": "./client",
+        "type": "path"
+      },
+      "original": {
+        "path": "./client",
+        "type": "path"
+      },
+      "parent": []
+    },
     "flake-compat": {
       "flake": false,
       "locked": {
@@ -70,11 +89,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1751792365,
-        "narHash": "sha256-J1kI6oAj25IG4EdVlg2hQz8NZTBNYvIS0l4wpr9KcUo=",
+        "lastModified": 1782723713,
+        "narHash": "sha256-oPXCU/SSUokcGaJREHibG1CBX3+s/W7orDWQOZDsEeQ=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "1fd8bada0b6117e6c7eb54aad5813023eed37ccb",
+        "rev": "b5aa0fbd538984f6e3d201be0005b4463d8b09f8",
         "type": "github"
       },
       "original": {
@@ -132,12 +151,28 @@
         "type": "github"
       }
     },
+    "nixpkgs_2": {
+      "locked": {
+        "lastModified": 1751792365,
+        "narHash": "sha256-J1kI6oAj25IG4EdVlg2hQz8NZTBNYvIS0l4wpr9KcUo=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "1fd8bada0b6117e6c7eb54aad5813023eed37ccb",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "opam-nix": {
       "inputs": {
         "flake-compat": "flake-compat",
         "flake-utils": "flake-utils_2",
         "mirage-opam-overlays": "mirage-opam-overlays",
-        "nixpkgs": "nixpkgs",
+        "nixpkgs": "nixpkgs_2",
         "nixpkgs-llvm17": "nixpkgs-llvm17",
         "nixpkgs-python38": "nixpkgs-python38",
         "nixpkgs-python39": "nixpkgs-python39",
@@ -215,13 +250,34 @@
     },
     "root": {
       "inputs": {
+        "client": "client",
         "flake-utils": "flake-utils",
+        "nixpkgs": "nixpkgs",
+        "opam-nix": "opam-nix",
+        "server": "server"
+      }
+    },
+    "server": {
+      "inputs": {
+        "flake-utils": [
+          "flake-utils"
+        ],
         "nixpkgs": [
-          "opam-nix",
           "nixpkgs"
         ],
-        "opam-nix": "opam-nix"
-      }
+        "opam-nix": [
+          "opam-nix"
+        ]
+      },
+      "locked": {
+        "path": "./server",
+        "type": "path"
+      },
+      "original": {
+        "path": "./server",
+        "type": "path"
+      },
+      "parent": []
     },
     "systems": {
       "locked": {
