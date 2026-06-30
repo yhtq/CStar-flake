@@ -23,6 +23,7 @@
         gdb
         ninja
       ]) ++ [ iceoryx2 bdwgc ];
+<<<<<<< HEAD
     in {
       cPackages = packages;
       devShells.default = pkgs.mkShell {
@@ -36,4 +37,17 @@
         '';
       };
     });
+=======
+    in pkgs.mkShell {
+      buildInputs = packages;
+      nativeBuildInputs = [ pkgs.makeWrapper ];
+      shellHook = ''
+        export LD=${pkgs.llvmPackages.bintools}/bin/ld.lld
+        export PATH=/home/yhtq/.cstar/bin:$PATH
+        # https://github.com/NixOS/nixpkgs/issues/415892
+        export NIX_LDFLAGS=$(echo $NIX_LDFLAGS | sed 's|-rpath .*outputs/out/lib||g')
+      '';
+    };
+  };
+>>>>>>> 8a65125cddccefc4384f0a0a966d423beea409c3
 }
